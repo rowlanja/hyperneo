@@ -2,13 +2,12 @@
 
 pragma solidity ^0.8.14;
 
-import "./src/libs/Position.sol";
-import "./src/libs/Tick.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol";
-import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
-
-contract UniswapV3Pool {
+import "./lib/Position.sol";
+import "./lib/Tick.sol";
+import "./interfaces/IERC20.sol";
+import "./interfaces/IUniswapV3MintCallback.sol";
+import "./interfaces/IUniswapV3SwapCallback.sol";
+contract NeoswapPool {
     using Tick for mapping(int24 => Tick.Info);
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
@@ -111,20 +110,34 @@ contract UniswapV3Pool {
         );
         position.update(amount);
 
+         amount0 = 0.998976618347425280 ether; // TODO: replace with calculation
+        amount1 = 5000 ether; // TODO: replace with calculation
+
+        liquidity += uint128(amount);
+
         uint256 balance0Before;
         uint256 balance1Before;
         if (amount0 > 0) balance0Before = balance0();
-        if (amount0 > 0) balance1Before = balance1();
-
+        if (amount1 > 0) balance1Before = balance1();
         IUniswapV3MintCallback(msg.sender).uniswapV3MintCallback(
             amount0,
             amount1,
             data
         );
-        if(amount0 > 0 && balance0Before + amount0 > balance0()) revert InsufficientInputAmount();
-        if(amount1 > 0 && balance1Before + amount1 > balance1()) revert InsufficientInputAmount();
+        if (amount0 > 0 && balance0Before + amount0 > balance0())
+            revert InsufficientInputAmount();
+        if (amount1 > 0 && balance1Before + amount1 > balance1())
+            revert InsufficientInputAmount();
 
-        emit Mint(msg.sender, owner, lowerTick, upperTick, amount, amount0, amount1);
+        emit Mint(
+            msg.sender,
+            owner,
+            lowerTick,
+            upperTick,
+            amount,
+            amount0,
+            amount1
+        );
     }
 
     function balance0() internal returns (uint256 balance) {
@@ -135,7 +148,7 @@ contract UniswapV3Pool {
         balance = IERC20(token1).balanceOf(address(this));
     }
 
-    function swap(address recipient) public returns (int256 amount0, int256 amount1) {
+    function swap(address recipient, bytes calldata data) public returns (int256 amount0, int256 amount1) {
         int24 nextTick = 85184;
         uint160 nextPrice = 5604469350942327889444743441197;
 
@@ -149,7 +162,7 @@ contract UniswapV3Pool {
         IUniswapV3SwapCallback(msg.sender).uniswapV3SwapCallback(
             amount0,
             amount1,
-            ""
+            data
         );
 
         if(balance1Before + uint256(amount1) < balance1()) {
