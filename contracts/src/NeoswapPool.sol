@@ -4,6 +4,8 @@ pragma solidity ^0.8.14;
 
 import "./lib/Position.sol";
 import "./lib/Tick.sol";
+import "./lib/TickMath.sol";
+import "./lib/SwapMath.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IUniswapV3MintCallback.sol";
 import "./interfaces/IUniswapV3SwapCallback.sol";
@@ -110,9 +112,19 @@ contract NeoswapPool {
         );
         position.update(amount);
 
-        amount0 = 0.998976618347425280 ether; // TODO: replace with calculation
-        amount1 = 5000 ether; // TODO: replace with calculation
-
+        // amount0 = 0.998976618347425280 ether; // TODO: replace with calculation
+        // amount1 = 5000 ether; // TODO: replace with calculation
+        Slot0 memory slot0_ = slot0;
+        amount0 = Math.calcAmount0Delta(
+            slot0_.sqrtPriceX96,
+            TickMath.getSqrtRatioAtTick(upperTick),
+            amount
+        );
+        amount1 = Math.calcAmount1Delta(
+            slot0_.sqrtPriceX96,
+            TickMath.getSqrtRatioAtTick(lowerTick),
+            amount
+        );
         liquidity += uint128(amount);
 
         uint256 balance0Before;
@@ -158,9 +170,60 @@ contract NeoswapPool {
         balance = IERC20(token1).balanceOf(address(this));
     }
 
-    function swap(address recipient, bytes calldata data) public returns (int256 amount0, int256 amount1) {
+    struct SwapState {
+        uint256 amountSpecifiedRemaining;
+        uint256 amountCalculated;
+        uint160 sqrtPriceX96;
+        int24 tick;
+    }
+    struct StepState {
+        uint160 sqrtPriceStartX96;
+        int24 nextTick;
+        uint160 sqrtPriceNextX96;
+        uint256 amountIn;
+        uint256 amountOut;
+    }
+
+    function swap(
+        address recipient,
+        bool zeroForOne,
+        uint256 amountSpecified,
+        bytes calldata data
+    ) public returns (int256 amount0, int256 amount1) {
+
+        Slot0 memory slot0_ = slot0;
+        SwapState memory state = SwapState({
+            amountSpecifiedRemaining: amountSpecified,
+            amountCalculated: 0,
+            sqrtPriceX96: slot0_.sqrtPriceX96,
+            tick: slot0_.tick
+        });
+
+        while(state.amountSpecifiedRemaining > 0) {
+            StepState memory step;
+
+            step.sqrtPriceStartX96 = state.sqrtPriceX96;
+            (step.nextTick, ) = tickBitmap.nextInitializedTickWithinOneWord(
+                state.tick,
+                1,
+                zeroForOne
+            );
+            step.sqrtPriceNextX96 = TickMath.getSqrtRatioAtTick(step.nextTick);
+        
+            (state.sqrtPriceX96, step.amountIn, step.amountOut) = SwapMath
+            .computeSwapStep(
+                state.sqrtPriceX96,
+                step.sqrtPriceNextX96,
+                liquidity,
+                state.amountSpecifiedRemaining
+            );
+            state.amountSpecifiedRemaining -= step.amountIn;
+            state.amountCalculated += step.amountOut;
+            state.tick = TickMath.getTickAtSqrtRatio(state.sqrtPriceX96);
+        }
         int24 nextTick = 85184;
         uint160 nextPrice = 5604469350942327889444743441197;
+
 
         amount0 = -0.008396714242162444 ether;
         amount1 = 42 ether;
