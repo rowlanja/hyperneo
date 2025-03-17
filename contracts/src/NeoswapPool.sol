@@ -110,7 +110,7 @@ contract NeoswapPool {
         );
         position.update(amount);
 
-         amount0 = 0.998976618347425280 ether; // TODO: replace with calculation
+        amount0 = 0.998976618347425280 ether; // TODO: replace with calculation
         amount1 = 5000 ether; // TODO: replace with calculation
 
         liquidity += uint128(amount);
@@ -128,6 +128,16 @@ contract NeoswapPool {
             revert InsufficientInputAmount();
         if (amount1 > 0 && balance1Before + amount1 > balance1())
             revert InsufficientInputAmount();
+
+        bool flippedLower = ticks.update(lowerTick, amount);
+        bool flippedUpper = ticks.update(upperTick, amount);
+        if (flippedLower) {
+            tickBitmap.flipTick(lowerTick, 1);
+        }
+        if (flippedUpper) {
+            tickBitmap.flipTick(upperTick, 1);
+        }
+ 
 
         emit Mint(
             msg.sender,

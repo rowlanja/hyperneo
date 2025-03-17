@@ -1,7 +1,7 @@
 pragma solidity ^0.8.14;
 
-import "../src/UniswapV3Pool.sol";
-import "../src/interfaces/IERC20.sol";
+import "./NeoswapPool.sol";
+import "./interfaces/IERC20.sol";
 
 contract NeoswapManager {
     function mint(
