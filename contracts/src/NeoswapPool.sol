@@ -132,12 +132,14 @@ contract NeoswapPool {
 
         Slot0 memory slot0_ = slot0;
 
+// if the price is below the liquidity range we only want the range to consist of token X
         if (slot0_.tick < lowerTick) {
             amount0 = MathLib.calcAmount0Delta(
                 TickMath.getSqrtRatioAtTick(lowerTick),
                 TickMath.getSqrtRatioAtTick(upperTick),
                 amount
             );
+// else we want both
         } else if (slot0_.tick < upperTick) {
             amount0 = MathLib.calcAmount0Delta(
                 slot0_.sqrtPriceX96,
