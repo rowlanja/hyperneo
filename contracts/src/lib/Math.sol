@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.14;
+pragma solidity >=0.5.0;
 
 import "./FixedPoint96.sol";
 import * as common from "prb-math/src/Common.sol";
@@ -49,24 +49,12 @@ library Math {
         }
     }
 
-    function divRoundingUp(
-        uint256 numerator,
-        uint256 denominator
-    ) internal pure returns (uint256 result) {
-        assembly {
-            result := add(
-                div(numerator, denominator),
-                gt(mod(numerator, denominator), 0)
-            )
-        }
-    }
-
      function getNextSqrtPriceFromInput(
         uint256 sqrtPriceX96,
         uint256 liquidity,
         uint256 amountIn,
         bool zeroForOne
-    ) internal pure returns (uint160 sqrtPriceNextX96) {
+    ) internal pure returns (uint256 sqrtPriceNextX96) {
         sqrtPriceNextX96 = zeroForOne
             ? getNextSqrtPriceFromAmount0RoundingUp(
                 sqrtPriceX96,
@@ -81,10 +69,10 @@ library Math {
     }
 
     function getNextSqrtPriceFromAmount0RoundingUp(
-        uint160 sqrtPriceX96,
-        uint128 liquidity,
+        uint256 sqrtPriceX96,
+        uint256 liquidity,
         uint256 amountIn
-    ) internal pure returns (uint160) {
+    ) internal pure returns (uint256) {
         uint256 numerator = uint256(liquidity) << FixedPoint96.RESOLUTION;
         uint256 product = amountIn * sqrtPriceX96;
 
@@ -110,24 +98,12 @@ library Math {
         uint256 sqrtPriceX96,
         uint256 liquidity,
         uint256 amountIn
-    ) internal pure returns (uint160) {
+    ) internal pure returns (uint256) {
         return
             uint256(
                 uint256(sqrtPriceX96) +
                     common.mulDiv(amountIn, FixedPoint96.Q96, liquidity)
             );
-    }
-
-    function mulDivRoundingUp(
-        uint256 a,
-        uint256 b,
-        uint256 denominator
-    ) internal pure returns (uint256 result) {
-        result = common.mulDiv(a, b, denominator);
-        if (mulmod(a, b, denominator) > 0) {
-            require(result < type(uint256).max);
-            result++;
-        }
     }
 
     function divRoundingUp(uint256 numerator, uint256 denominator)

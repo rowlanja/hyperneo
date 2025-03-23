@@ -1,4 +1,4 @@
-pragma solidity ^0.8.14;
+pragma solidity >=0.5.0;
 
 import "./NeoswapPool.sol";
 import "./interfaces/IERC20.sol";
