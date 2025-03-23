@@ -11,6 +11,8 @@ import "./lib/SwapMath.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IUniswapV3MintCallback.sol";
 import "./interfaces/IUniswapV3SwapCallback.sol";
+import "./interfaces/IUniswapV3FlashCallback.sol";
+
 contract NeoswapPool {
     using Tick for mapping(int24 => Tick.Info);
     using TickBitmap for mapping(int16 => uint256);
@@ -131,19 +133,19 @@ contract NeoswapPool {
         Slot0 memory slot0_ = slot0;
 
         if (slot0_.tick < lowerTick) {
-            amount0 = Math.calcAmount0Delta(
+            amount0 = MathLib.calcAmount0Delta(
                 TickMath.getSqrtRatioAtTick(lowerTick),
                 TickMath.getSqrtRatioAtTick(upperTick),
                 amount
             );
         } else if (slot0_.tick < upperTick) {
-            amount0 = Math.calcAmount0Delta(
+            amount0 = MathLib.calcAmount0Delta(
                 slot0_.sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(upperTick),
                 amount
             );
 
-            amount1 = Math.calcAmount1Delta(
+            amount1 = MathLib.calcAmount1Delta(
                 slot0_.sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(lowerTick),
                 amount
@@ -151,7 +153,7 @@ contract NeoswapPool {
 
             liquidity = LiquidityMath.addLiquidity(liquidity, int128(amount)); // TODO: amount is negative when removing liquidity
         } else {
-            amount1 = Math.calcAmount1Delta(
+            amount1 = MathLib.calcAmount1Delta(
                 TickMath.getSqrtRatioAtTick(lowerTick),
                 TickMath.getSqrtRatioAtTick(upperTick),
                 amount

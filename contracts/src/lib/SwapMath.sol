@@ -21,12 +21,12 @@ library SwapMath {
         bool zeroForOne = sqrtPriceCurrentX96 >= sqrtPriceTargetX96;
 
         amountIn = zeroForOne
-            ? Math.calcAmount0Delta(
+            ? MathLib.calcAmount0Delta(
                 sqrtPriceCurrentX96,
                 sqrtPriceTargetX96,
                 liquidity
             )
-            : Math.calcAmount1Delta(
+            : MathLib.calcAmount1Delta(
                 sqrtPriceCurrentX96,
                 sqrtPriceTargetX96,
                 liquidity
@@ -34,19 +34,19 @@ library SwapMath {
 
         if (amountRemaining >= amountIn) sqrtPriceNextX96 = sqrtPriceTargetX96;
         else
-            sqrtPriceNextX96 = Math.getNextSqrtPriceFromInput(
+            sqrtPriceNextX96 = MathLib.getNextSqrtPriceFromInput(
                 sqrtPriceCurrentX96,
                 liquidity,
                 amountRemaining,
                 zeroForOne
             );
 
-        amountIn = Math.calcAmount0Delta(
+        amountIn = MathLib.calcAmount0Delta(
             sqrtPriceCurrentX96,
             sqrtPriceNextX96,
             liquidity
         );
-        amountOut = Math.calcAmount1Delta(
+        amountOut = MathLib.calcAmount1Delta(
             sqrtPriceCurrentX96,
             sqrtPriceNextX96,
             liquidity
