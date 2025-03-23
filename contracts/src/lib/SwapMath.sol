@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity >=0.5.0;
+pragma solidity ^0.8.14;
 
-import "./Math.sol";
+import "./MathLib.sol";
 
 library SwapMath {
-    
-    // probably where we will hook into hyper liquid pools
     function computeSwapStep(
         uint160 sqrtPriceCurrentX96,
         uint160 sqrtPriceTargetX96,
@@ -21,12 +19,28 @@ library SwapMath {
         )
     {
         bool zeroForOne = sqrtPriceCurrentX96 >= sqrtPriceTargetX96;
-        sqrtPriceNextX96 = Math.getNextSqrtPriceFromInput(
-            sqrtPriceCurrentX96,
-            liquidity,
-            amountRemaining,
-            zeroForOne
-        );
+
+        amountIn = zeroForOne
+            ? Math.calcAmount0Delta(
+                sqrtPriceCurrentX96,
+                sqrtPriceTargetX96,
+                liquidity
+            )
+            : Math.calcAmount1Delta(
+                sqrtPriceCurrentX96,
+                sqrtPriceTargetX96,
+                liquidity
+            );
+
+        if (amountRemaining >= amountIn) sqrtPriceNextX96 = sqrtPriceTargetX96;
+        else
+            sqrtPriceNextX96 = Math.getNextSqrtPriceFromInput(
+                sqrtPriceCurrentX96,
+                liquidity,
+                amountRemaining,
+                zeroForOne
+            );
+
         amountIn = Math.calcAmount0Delta(
             sqrtPriceCurrentX96,
             sqrtPriceNextX96,
@@ -37,9 +51,9 @@ library SwapMath {
             sqrtPriceNextX96,
             liquidity
         );
+
         if (!zeroForOne) {
-           (amountIn, amountOut) = (amountOut, amountIn);
+            (amountIn, amountOut) = (amountOut, amountIn);
         }
- 
     }
 }

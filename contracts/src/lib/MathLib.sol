@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity >=0.5.0;
+pragma solidity ^0.8.14;
 
 import "./FixedPoint96.sol";
-import * as common from "prb-math/src/Common.sol";
+import * as PRBMath from "prb-math/src/Common.sol";
 
-library Math {
+library MathLib {
+    /// @notice Calculates amount0 delta between two prices
+    /// TODO: round down when removing liquidity
     function calcAmount0Delta(
         uint160 sqrtPriceAX96,
         uint160 sqrtPriceBX96,
@@ -12,7 +14,9 @@ library Math {
     ) internal pure returns (uint256 amount0) {
         if (sqrtPriceAX96 > sqrtPriceBX96)
             (sqrtPriceAX96, sqrtPriceBX96) = (sqrtPriceBX96, sqrtPriceAX96);
+
         require(sqrtPriceAX96 > 0);
+
         amount0 = divRoundingUp(
             mulDivRoundingUp(
                 (uint256(liquidity) << FixedPoint96.RESOLUTION),
@@ -23,6 +27,8 @@ library Math {
         );
     }
 
+    /// @notice Calculates amount1 delta between two prices
+    /// TODO: round down when removing liquidity
     function calcAmount1Delta(
         uint160 sqrtPriceAX96,
         uint160 sqrtPriceBX96,
@@ -30,6 +36,7 @@ library Math {
     ) internal pure returns (uint256 amount1) {
         if (sqrtPriceAX96 > sqrtPriceBX96)
             (sqrtPriceAX96, sqrtPriceBX96) = (sqrtPriceBX96, sqrtPriceAX96);
+
         amount1 = mulDivRoundingUp(
             liquidity,
             (sqrtPriceBX96 - sqrtPriceAX96),
@@ -37,24 +44,12 @@ library Math {
         );
     }
 
-    function mulDivRoundingUp(
-        uint256 a,
-        uint256 b,
-        uint256 denominator
-    ) internal pure returns (uint256 result) {
-        result = common.mulDiv(a, b, denominator);
-        if (mulmod(a, b, denominator) > 0) {
-            require(result < type(uint256).max);
-            result++;
-        }
-    }
-
-     function getNextSqrtPriceFromInput(
-        uint256 sqrtPriceX96,
-        uint256 liquidity,
+    function getNextSqrtPriceFromInput(
+        uint160 sqrtPriceX96,
+        uint128 liquidity,
         uint256 amountIn,
         bool zeroForOne
-    ) internal pure returns (uint256 sqrtPriceNextX96) {
+    ) internal pure returns (uint160 sqrtPriceNextX96) {
         sqrtPriceNextX96 = zeroForOne
             ? getNextSqrtPriceFromAmount0RoundingUp(
                 sqrtPriceX96,
@@ -69,10 +64,10 @@ library Math {
     }
 
     function getNextSqrtPriceFromAmount0RoundingUp(
-        uint256 sqrtPriceX96,
-        uint256 liquidity,
+        uint160 sqrtPriceX96,
+        uint128 liquidity,
         uint256 amountIn
-    ) internal pure returns (uint256) {
+    ) internal pure returns (uint160) {
         uint256 numerator = uint256(liquidity) << FixedPoint96.RESOLUTION;
         uint256 product = amountIn * sqrtPriceX96;
 
@@ -95,15 +90,25 @@ library Math {
     }
 
     function getNextSqrtPriceFromAmount1RoundingDown(
-        uint256 sqrtPriceX96,
-        uint256 liquidity,
+        uint160 sqrtPriceX96,
+        uint128 liquidity,
         uint256 amountIn
-    ) internal pure returns (uint256) {
+    ) internal pure returns (uint160) {
         return
-            uint256(
-                uint256(sqrtPriceX96) +
-                    common.mulDiv(amountIn, FixedPoint96.Q96, liquidity)
-            );
+            sqrtPriceX96 +
+            uint160((amountIn << FixedPoint96.RESOLUTION) / liquidity);
+    }
+
+    function mulDivRoundingUp(
+        uint256 a,
+        uint256 b,
+        uint256 denominator
+    ) internal pure returns (uint256 result) {
+        result = PRBMath.mulDiv(a, b, denominator);
+        if (mulmod(a, b, denominator) > 0) {
+            require(result < type(uint256).max);
+            result++;
+        }
     }
 
     function divRoundingUp(uint256 numerator, uint256 denominator)
