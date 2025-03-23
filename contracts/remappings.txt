@@ -1,1 +1,2 @@
 prb-math/=lib/prb-math/
+abdk-consulting/=lib/abdk-consulting/

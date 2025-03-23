@@ -20,9 +20,9 @@ contract NeoswapManager {
         );
     }
 
-    function swap(
-        address poolAddress_, bytes calldata data
-    ) public {
-        NeoswapPool(poolAddress_).swap(msg.sender, data);
-    }
+    // function swap(
+    //     address poolAddress_, bytes calldata data
+    // ) public {
+    //     NeoswapPool(poolAddress_).swap(msg.sender, data);
+    // }
 }

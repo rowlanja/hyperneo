@@ -7,6 +7,7 @@ import "./ERC20Mintable.sol";
 import "../src/NeoswapPool.sol";
 import "./TestUtils.sol";
 import "./UniswapV3Pool.Utils.t.sol";
+import "../src/interfaces/IUniswapV3Pool.sol";
 
 contract NeoswapPoolTest is Test, UniswapV3PoolUtils  {
     ERC20Mintable token0;
@@ -839,7 +840,7 @@ contract NeoswapPoolTest is Test, UniswapV3PoolUtils  {
         token0.mint(address(this), params.wethBalance);
         token1.mint(address(this), params.usdcBalance);
 
-        pool = new UniswapV3Pool(
+        pool = new NeoswapPool(
             address(token0),
             address(token1),
             sqrtP(params.currentPrice),

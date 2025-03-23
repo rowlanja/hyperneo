@@ -2,10 +2,11 @@
 pragma solidity ^0.8.14;
 
 import "forge-std/Test.sol";
-import "abdk-math/ABDKMath64x64.sol";
 
 import "../src/lib/FixedPoint96.sol";
 import "../src/NeoswapPool.sol";
+import "../lib/abdk-consulting/ABDKMath64x64.sol";
+import "../src/interfaces/IUniswapV3Pool.sol";
 
 import "./ERC20Mintable.sol";
 
@@ -111,7 +112,7 @@ abstract contract TestUtils is Test {
     }
 
     struct ExpectedStateAfterSwap {
-        UniswapV3Pool pool;
+        NeoswapPool pool;
         ERC20Mintable token0;
         ERC20Mintable token1;
         uint256 userBalance0;
@@ -183,7 +184,7 @@ abstract contract TestUtils is Test {
     ) internal pure returns (bytes memory) {
         return
             abi.encode(
-                NeoswapPool.CallbackData({
+                IUniswapV3Pool.CallbackData({
                     token0: token0_,
                     token1: token1_,
                     payer: payer
@@ -191,7 +192,7 @@ abstract contract TestUtils is Test {
             );
     }
 
-    function tickInBitMap(UniswapV3Pool pool, int24 tick_)
+    function tickInBitMap(NeoswapPool pool, int24 tick_)
         internal
         view
         returns (bool initialized)
