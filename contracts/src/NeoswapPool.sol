@@ -85,14 +85,20 @@ contract NeoswapPool {
     mapping(int16 => uint256) public tickBitmap;
     mapping(bytes32 => Position.Info) public positions;
 
-    constructor(
-        address token0_,
-        address token1_,
-        uint160 sqrtPriceX96,
-        int24 tick
-    ) {
+    constructor() {
+        (factory, token0, token1, tickSpacing) = IUniswapV3PoolDeployer(
+            msg.sender
+        ).parameters();
         token0 = token0_;
         token1 = token1_;
+
+        slot0 = Slot0({sqrtPriceX96: sqrtPriceX96, tick: tick});
+    }
+
+    function initialize(uint160 sqrtPriceX96) public {
+        if (slot0.sqrtPriceX96 != 0) revert AlreadyInitialized();
+
+        int24 tick = TickMath.getTickAtSqrtRatio(sqrtPriceX96);
 
         slot0 = Slot0({sqrtPriceX96: sqrtPriceX96, tick: tick});
     }
@@ -224,7 +230,7 @@ contract NeoswapPool {
 
             (step.nextTick, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(
                 state.tick,
-                1,
+                1, // This is tick spacing. For loq volatility this should be 1. For high / medium volatility this should be 2, 3 or 5 but leads to less precision.
                 zeroForOne
             );
 
