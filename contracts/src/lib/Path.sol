@@ -1,4 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity ^0.8.14;
+
 library Path {
+    using BytesLib for bytes;
+    using BytesLibExt for bytes;
     /// @dev The length the bytes encoded address
     uint256 private constant ADDR_SIZE = 20;
     /// @dev The length the bytes encoded tick spacing
@@ -26,6 +31,20 @@ library Path {
 
     function skipToken(bytes memory path) internal pure returns (bytes memory) {
         return path.slice(NEXT_OFFSET, path.length - NEXT_OFFSET);
-    } 
+    }
+
+    function decodeFirstPool(bytes memory path)
+        internal
+        pure
+        returns (
+            address tokenIn,
+            address tokenOut,
+            uint24 tickSpacing
+        )
+    {
+        tokenIn = path.toAddress(0);
+        tickSpacing = path.toUint24(ADDR_SIZE);
+        tokenOut = path.toAddress(NEXT_OFFSET);
+    }
 
 }

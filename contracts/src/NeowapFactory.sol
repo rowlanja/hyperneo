@@ -1,15 +1,32 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity ^0.8.14;
 
+import "./interfaces/IUniswapV3PoolDeployer.sol";
+import "./NeoswapPool.sol";
 
 contract NeoswapFactory is IUniswapV3PoolDeployer {
-    mapping(uint24 => bool) public tickSpacings;
-    constructor() {
-        tickSpacings[10] = true;
-        tickSpacings[60] = true;        
-    }
+ error PoolAlreadyExists();
+    error ZeroAddressNotAllowed();
+    error TokensMustBeDifferent();
+    error UnsupportedTickSpacing();
+
+    event PoolCreated(
+        address indexed token0,
+        address indexed token1,
+        uint24 indexed tickSpacing,
+        address pool
+    );
 
     PoolParameters public parameters;
+
+    mapping(uint24 => bool) public tickSpacings;
     mapping(address => mapping(address => mapping(uint24 => address)))
         public pools;
+
+    constructor() {
+        tickSpacings[10] = true;
+        tickSpacings[60] = true;
+    }
 
     function createPool(
         address tokenX,
@@ -23,10 +40,11 @@ contract NeoswapFactory is IUniswapV3PoolDeployer {
             ? (tokenX, tokenY)
             : (tokenY, tokenX);
 
-        if (tokenX == address(0)) revert TokenXCannotBeZero();
+        if (tokenX == address(0)) revert ZeroAddressNotAllowed();
         if (pools[tokenX][tokenY][tickSpacing] != address(0))
-        revert PoolAlreadyExists();
-            parameters = PoolParameters({
+            revert PoolAlreadyExists();
+
+        parameters = PoolParameters({
             factory: address(this),
             token0: tokenX,
             token1: tokenY,
@@ -34,7 +52,7 @@ contract NeoswapFactory is IUniswapV3PoolDeployer {
         });
 
         pool = address(
-            new NeoswapPool{
+            new UniswapV3Pool{
                 salt: keccak256(abi.encodePacked(tokenX, tokenY, tickSpacing))
             }()
         );

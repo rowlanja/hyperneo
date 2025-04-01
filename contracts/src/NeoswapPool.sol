@@ -2,12 +2,14 @@
 
 pragma solidity >=0.5.0;
 
+import "./lib/LiquidityMath.sol";
 import "./lib/Position.sol";
 import "./lib/Tick.sol";
 import "./lib/MathLib.sol";
 import "./lib/TickMath.sol";
 import './lib/TickBitmap.sol';
 import "./lib/SwapMath.sol";
+
 import "./interfaces/IERC20.sol";
 import "./interfaces/IUniswapV3MintCallback.sol";
 import "./interfaces/IUniswapV3SwapCallback.sol";
