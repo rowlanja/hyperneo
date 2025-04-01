@@ -3,9 +3,13 @@ pragma solidity ^0.8.14;
 
 import "forge-std/Test.sol";
 
+import "../src/interfaces/IUniswapV3Pool.sol";
+import "../src/interfaces/IUniswapV3Manager.sol";
+import "../src/lib/FixedPoint96.sol";
+import "../lib/abdk-consulting/ABDKMath64x64.sol";
+
 import "../src/lib/FixedPoint96.sol";
 import "../src/NeoswapPool.sol";
-import "../lib/abdk-consulting/ABDKMath64x64.sol";
 import "../src/interfaces/IUniswapV3Pool.sol";
 
 import "./ERC20Mintable.sol";

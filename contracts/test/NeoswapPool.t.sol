@@ -4,10 +4,11 @@ pragma solidity ^0.8.14;
 
 import "forge-std/Test.sol";
 import "./ERC20Mintable.sol";
-import "../src/NeoswapPool.sol";
-import "./TestUtils.sol";
 import "./UniswapV3Pool.Utils.t.sol";
+
+import "./TestUtils.sol";
 import "../src/interfaces/IUniswapV3Pool.sol";
+import "../src/NeoswapPool.sol";
 
 contract NeoswapPoolTest is Test, UniswapV3PoolUtils  {
     ERC20Mintable token0;
