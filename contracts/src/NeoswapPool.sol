@@ -78,7 +78,7 @@ contract NeoswapPool is IUniswapV3Pool {
         int24 tick
     );
 
-    // Pool parameters
+     // Pool parameters
     address public immutable factory;
     address public immutable token0;
     address public immutable token1;
@@ -87,7 +87,6 @@ contract NeoswapPool is IUniswapV3Pool {
 
     uint256 public feeGrowthGlobal0X128;
     uint256 public feeGrowthGlobal1X128;
-
 
     // First slot will contain essential data
     struct Slot0 {
@@ -108,6 +107,7 @@ contract NeoswapPool is IUniswapV3Pool {
         uint256 amountCalculated;
         uint160 sqrtPriceX96;
         int24 tick;
+        uint256 feeGrowthGlobalX128;
         uint128 liquidity;
     }
 
@@ -118,6 +118,7 @@ contract NeoswapPool is IUniswapV3Pool {
         uint160 sqrtPriceNextX96;
         uint256 amountIn;
         uint256 amountOut;
+        uint256 feeAmount;
     }
 
     Slot0 public slot0;
@@ -379,7 +380,7 @@ contract NeoswapPool is IUniswapV3Pool {
     }
 
 
-    function swap(
+     function swap(
         address recipient,
         bool zeroForOne,
         uint256 amountSpecified,
@@ -403,6 +404,9 @@ contract NeoswapPool is IUniswapV3Pool {
             amountCalculated: 0,
             sqrtPriceX96: slot0_.sqrtPriceX96,
             tick: slot0_.tick,
+            feeGrowthGlobalX128: zeroForOne
+                ? feeGrowthGlobal0X128
+                : feeGrowthGlobal1X128,
             liquidity: liquidity_
         });
 
@@ -420,29 +424,53 @@ contract NeoswapPool is IUniswapV3Pool {
                 zeroForOne
             );
 
-
             step.sqrtPriceNextX96 = TickMath.getSqrtRatioAtTick(step.nextTick);
 
-             (state.sqrtPriceX96, step.amountIn, step.amountOut) = SwapMath
-                .computeSwapStep(
-                    state.sqrtPriceX96,
-                    (
-                        zeroForOne
-                            ? step.sqrtPriceNextX96 < sqrtPriceLimitX96
-                            : step.sqrtPriceNextX96 > sqrtPriceLimitX96
-                    )
-                        ? sqrtPriceLimitX96
-                        : step.sqrtPriceNextX96,
-                    state.liquidity,
-                    state.amountSpecifiedRemaining
-                );
+            (
+                state.sqrtPriceX96,
+                step.amountIn,
+                step.amountOut,
+                step.feeAmount
+            ) = SwapMath.computeSwapStep(
+                state.sqrtPriceX96,
+                (
+                    zeroForOne
+                        ? step.sqrtPriceNextX96 < sqrtPriceLimitX96
+                        : step.sqrtPriceNextX96 > sqrtPriceLimitX96
+                )
+                    ? sqrtPriceLimitX96
+                    : step.sqrtPriceNextX96,
+                state.liquidity,
+                state.amountSpecifiedRemaining,
+                fee
+            );
 
-            state.amountSpecifiedRemaining -= step.amountIn;
+            state.amountSpecifiedRemaining -= step.amountIn + step.feeAmount;
             state.amountCalculated += step.amountOut;
+
+            if (state.liquidity > 0) {
+                state.feeGrowthGlobalX128 += PRBMath.mulDiv(
+                    step.feeAmount,
+                    FixedPoint128.Q128,
+                    state.liquidity
+                );
+            }
 
             if (state.sqrtPriceX96 == step.sqrtPriceNextX96) {
                 if (step.initialized) {
-                    int128 liquidityDelta = ticks.cross(step.nextTick);
+                    int128 liquidityDelta = ticks.cross(
+                        step.nextTick,
+                        (
+                            zeroForOne
+                                ? state.feeGrowthGlobalX128
+                                : feeGrowthGlobal0X128
+                        ),
+                        (
+                            zeroForOne
+                                ? feeGrowthGlobal1X128
+                                : state.feeGrowthGlobalX128
+                        )
+                    );
 
                     if (zeroForOne) liquidityDelta = -liquidityDelta;
 
@@ -461,10 +489,39 @@ contract NeoswapPool is IUniswapV3Pool {
         }
 
         if (state.tick != slot0_.tick) {
-            (slot0.sqrtPriceX96, slot0.tick) = (state.sqrtPriceX96, state.tick);
+            (
+                uint16 observationIndex,
+                uint16 observationCardinality
+            ) = observations.write(
+                    slot0_.observationIndex,
+                    _blockTimestamp(),
+                    slot0_.tick,
+                    slot0_.observationCardinality,
+                    slot0_.observationCardinalityNext
+                );
+
+            (
+                slot0.sqrtPriceX96,
+                slot0.tick,
+                slot0.observationIndex,
+                slot0.observationCardinality
+            ) = (
+                state.sqrtPriceX96,
+                state.tick,
+                observationIndex,
+                observationCardinality
+            );
+        } else {
+            slot0.sqrtPriceX96 = state.sqrtPriceX96;
         }
 
         if (liquidity_ != state.liquidity) liquidity = state.liquidity;
+
+        if (zeroForOne) {
+            feeGrowthGlobal0X128 = state.feeGrowthGlobalX128;
+        } else {
+            feeGrowthGlobal1X128 = state.feeGrowthGlobalX128;
+        }
 
         (amount0, amount1) = zeroForOne
             ? (
