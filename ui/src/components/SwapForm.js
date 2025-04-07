@@ -122,6 +122,7 @@ const SwapForm = ({ setPairs }) => {
    * @returns array of 'pair' objects.
    */
   const loadPairs = () => {
+    console.log(config.factoryAddress);
     const factory = new ethers.Contract(
       config.factoryAddress,
       config.ABIs.Factory,
