@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.14;
 
-import "prb-math/PRBMath.sol";
+import * as CommonLM from "prb-math/Common.sol";
 import "./FixedPoint96.sol";
 
 library LiquidityMath {
@@ -14,13 +14,13 @@ library LiquidityMath {
         if (sqrtPriceAX96 > sqrtPriceBX96)
             (sqrtPriceAX96, sqrtPriceBX96) = (sqrtPriceBX96, sqrtPriceAX96);
 
-        uint256 intermediate = PRBMath.mulDiv(
+        uint256 intermediate = CommonLM.mulDiv(
             sqrtPriceAX96,
             sqrtPriceBX96,
             FixedPoint96.Q96
         );
         liquidity = uint128(
-            PRBMath.mulDiv(amount0, intermediate, sqrtPriceBX96 - sqrtPriceAX96)
+            CommonLM.mulDiv(amount0, intermediate, sqrtPriceBX96 - sqrtPriceAX96)
         );
     }
 
@@ -34,7 +34,7 @@ library LiquidityMath {
             (sqrtPriceAX96, sqrtPriceBX96) = (sqrtPriceBX96, sqrtPriceAX96);
 
         liquidity = uint128(
-            PRBMath.mulDiv(
+            CommonLM.mulDiv(
                 amount1,
                 FixedPoint96.Q96,
                 sqrtPriceBX96 - sqrtPriceAX96

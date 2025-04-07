@@ -2,7 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "./LiquidityMath.sol";
-import "./Math.sol";
+import "./MathUtil.sol";
 
 library Tick {
     struct Info {

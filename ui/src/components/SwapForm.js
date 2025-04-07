@@ -98,6 +98,8 @@ const SwapForm = ({ setPairs }) => {
     ));
 
     loadPairs().then((pairs) => {
+      console.log("looking for pairs");
+      console.log(pairs);
       const pair_ = pairs.filter((pair) => {
         return pair.token0.address === config.wethAddress || pair.token1.address === config.wethAddress;
       })[0];
@@ -128,6 +130,7 @@ const SwapForm = ({ setPairs }) => {
 
     return factory.queryFilter("PoolCreated", "earliest", "latest")
       .then((events) => {
+        console.log("returning events");
         const pairs = events.map((event) => {
           return {
             token0: {
@@ -146,7 +149,13 @@ const SwapForm = ({ setPairs }) => {
         return Promise.resolve(pairs);
       }).catch((err) => {
         console.error(err)
+
+        return [];
       });
+  }
+
+  const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
 

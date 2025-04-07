@@ -2,12 +2,12 @@
 pragma solidity ^0.8.14;
 
 import "forge-std/Test.sol";
-import "../../src/lib/Math.sol";
+import "../../src/lib/MathUtil.sol";
 import "../../src/lib/TickMath.sol";
 
 contract MathTest is Test {
     function testCalcAmount0Delta() public {
-        int256 amount0 = Math.calcAmount0Delta(
+        int256 amount0 = MathUtil.calcAmount0Delta(
             TickMath.getSqrtRatioAtTick(85176),
             TickMath.getSqrtRatioAtTick(86129),
             int128(1517882343751509868544)
@@ -17,7 +17,7 @@ contract MathTest is Test {
     }
 
     function testCalcAmount1Delta() public {
-        int256 amount1 = Math.calcAmount1Delta(
+        int256 amount1 = MathUtil.calcAmount1Delta(
             TickMath.getSqrtRatioAtTick(84222),
             TickMath.getSqrtRatioAtTick(85176),
             int128(1517882343751509868544)
@@ -27,7 +27,7 @@ contract MathTest is Test {
     }
 
     function testCalcAmount0DeltaNegative() public {
-        int256 amount0 = Math.calcAmount0Delta(
+        int256 amount0 = MathUtil.calcAmount0Delta(
             TickMath.getSqrtRatioAtTick(85176),
             TickMath.getSqrtRatioAtTick(86129),
             int128(-1517882343751509868544)
@@ -37,7 +37,7 @@ contract MathTest is Test {
     }
 
     function testCalcAmount1DeltaNegative() public {
-        int256 amount1 = Math.calcAmount1Delta(
+        int256 amount1 = MathUtil.calcAmount1Delta(
             TickMath.getSqrtRatioAtTick(84222),
             TickMath.getSqrtRatioAtTick(85176),
             int128(-1517882343751509868544)

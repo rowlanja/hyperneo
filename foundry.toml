@@ -2,5 +2,6 @@
 src = "src"
 out = "out"
 libs = ["lib"]
-
+viaIR = true
+fs_permissions = [{ access = "read", path = "./test/fixtures/tokenuri0" }, {access = "read", path = "./test/fixtures/tokenuri1"}, {access = "read", path = "./test/fixtures/tokenuri2"}]
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

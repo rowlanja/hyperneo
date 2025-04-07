@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.14;
 
-import "prb-math/PRBMath.sol";
+import * as CommonU from "prb-math/Common.sol";
 
 import "./interfaces/IERC20.sol";
 import "./interfaces/IUniswapV3FlashCallback.sol";
@@ -12,7 +12,7 @@ import "./interfaces/IUniswapV3SwapCallback.sol";
 
 import "./lib/FixedPoint128.sol";
 import "./lib/LiquidityMath.sol";
-import "./lib/Math.sol";
+import "./lib/MathUtil.sol";
 import "./lib/Oracle.sol";
 import "./lib/Position.sol";
 import "./lib/SwapMath.sol";
@@ -224,19 +224,19 @@ contract UniswapV3Pool is IUniswapV3Pool {
         );
 
         if (slot0_.tick < params.lowerTick) {
-            amount0 = Math.calcAmount0Delta(
+            amount0 = MathUtil.calcAmount0Delta(
                 TickMath.getSqrtRatioAtTick(params.lowerTick),
                 TickMath.getSqrtRatioAtTick(params.upperTick),
                 params.liquidityDelta
             );
         } else if (slot0_.tick < params.upperTick) {
-            amount0 = Math.calcAmount0Delta(
+            amount0 = MathUtil.calcAmount0Delta(
                 slot0_.sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(params.upperTick),
                 params.liquidityDelta
             );
 
-            amount1 = Math.calcAmount1Delta(
+            amount1 = MathUtil.calcAmount1Delta(
                 TickMath.getSqrtRatioAtTick(params.lowerTick),
                 slot0_.sqrtPriceX96,
                 params.liquidityDelta
@@ -247,7 +247,7 @@ contract UniswapV3Pool is IUniswapV3Pool {
                 params.liquidityDelta
             );
         } else {
-            amount1 = Math.calcAmount1Delta(
+            amount1 = MathUtil.calcAmount1Delta(
                 TickMath.getSqrtRatioAtTick(params.lowerTick),
                 TickMath.getSqrtRatioAtTick(params.upperTick),
                 params.liquidityDelta
@@ -451,7 +451,7 @@ contract UniswapV3Pool is IUniswapV3Pool {
             state.amountCalculated += step.amountOut;
 
             if (state.liquidity > 0) {
-                state.feeGrowthGlobalX128 += PRBMath.mulDiv(
+                state.feeGrowthGlobalX128 += CommonU.mulDiv(
                     step.feeAmount,
                     FixedPoint128.Q128,
                     state.liquidity
@@ -575,8 +575,8 @@ contract UniswapV3Pool is IUniswapV3Pool {
         uint256 amount1,
         bytes calldata data
     ) public {
-        uint256 fee0 = Math.mulDivRoundingUp(amount0, fee, 1e6);
-        uint256 fee1 = Math.mulDivRoundingUp(amount1, fee, 1e6);
+        uint256 fee0 = MathUtil.mulDivRoundingUp(amount0, fee, 1e6);
+        uint256 fee1 = MathUtil.mulDivRoundingUp(amount1, fee, 1e6);
 
         uint256 balance0Before = IERC20(token0).balanceOf(address(this));
         uint256 balance1Before = IERC20(token1).balanceOf(address(this));

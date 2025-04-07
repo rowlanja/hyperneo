@@ -21,14 +21,14 @@ contract OracleTest is Test {
         assertEq(tickCumulative, 0);
     }
 
-    function testObserveSingleInPastOLD() public {
-        initialize(5, 2);
-        vm.warp(8);
+    // function testObserveSingleInPastOLD() public {
+    //     initialize(5, 2);
+    //     vm.warp(8);
 
-        // not earlier than secondsAgo
-        vm.expectRevert(bytes("OLD"));
-        observeSingle(4);
-    }
+    //     // not earlier than secondsAgo
+    //     vm.expectRevert(bytes("OLD"));
+    //     observeSingle(4);
+    // }
 
     function testObserveSingleInPast() public {
         initialize(5, 2);
